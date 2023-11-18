@@ -12,7 +12,59 @@ from rest_framework import mixins
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import authentication_classes
+from rest_framework import viewsets
 
+#generic viewset
+
+class DataViewSet(viewsets.ModelViewSet):
+
+    serializer_class = DataSerializer
+    queryset = Data.objects.all()
+
+    
+
+class DataViewSet2(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin
+                  ,mixins.UpdateModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin):
+
+    serializer_class = DataSerializer
+    queryset = Data.objects.all()
+    
+    
+# end generic viewset
+
+#viewset
+class DataViewSet1(viewsets.ModelViewSet):
+
+    serializer_class = DataSerializer
+    queryset = Data.objects.all()
+
+
+    def list(self, request):
+        app = Data.objects.all()
+        serializer = DataSerializer(app, many=True)
+        return Response(serializer.data)
+    
+    def create(self, request):
+        serializer = DataSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
+    
+    def retrieve(self, request, pk=None):
+        app = Data.objects.get(id=pk)
+        serializer = DataSerializer(app, many=False)
+        return Response(serializer.data)
+    
+    def update(self, request, pk=None):
+        app = Data.objects.get(id=pk)
+        serializer = DataSerializer(app, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
+    
+#end viewset
 
 #generic view
 class GenericAPIView(generics.GenericAPIView, mixins.ListModelMixin, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin):
@@ -24,10 +76,10 @@ class GenericAPIView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Crea
     serializer_class = DataSerializer
     queryset = Data.objects.all()
 
-    #lookup_field = 'id'
+    lookup_field = 'id'
 
-    #authentication_classes = [SessionAuthentication, BasicAuthentication]
-    authentification_classes = [TokenAuthentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    #authentification_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -36,11 +88,13 @@ class GenericAPIView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Crea
     def post(self, request):
         return self.create(request)
 
-    def put(self, request, pk):
-        return self.update(request, pk)
+    def put(self, request, id=None):
+        return self.update(request, id)
     
-    def delete(self, request, pk):
-        return self.destroy(request, pk)
+    def delete(self, request, id):
+        return self.destroy(request, id)
+    
+#end generic view
 
     
 #dataAPIView
